@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<!-- HTML frontend to generate NAT rules on Juniper SRX firewall. 20200711 v1.0 -->
+<body>
+    <head>
+        <style>
+            textarea.txtbox_pos {
+                vertical-align: middle;
+            }
+
+
+            .default_style {
+                align: left;
+            }
+
+            .addrObj {
+                align: left;
+            }
+
+            .creatobjdiv {
+                align: left;
+                width: 80%;
+            }
+
+            .createfwrdiv {
+                align: left;
+                width: 80%;
+            }
+
+            .footer {
+                font-family: Helvetica;
+                font-size: x-small;
+            }
+
+            .tooltip {
+                position: relative;
+                display: inline-block;
+                font-family: Helvetica;
+                font-size: small;
+                border-bottom: 1px dotted black;
+            }
+
+                .tooltip .tooltiptext {
+                    visibility: hidden;
+                    width: 220px;
+                    background-color: black;
+                    color: #fff;
+                    text-align: left;
+                    border-radius: 5px;
+                    padding: 5px 0 5px 5px;
+                    position: absolute;
+                    z-index: 1;
+                    top: -5px;
+                    left: 110%;
+                }
+
+                    .tooltip .tooltiptext::after {
+                        content: "";
+                        position: absolute;
+                        top: 50%;
+                        right: 100%;
+                        margin-top: -5px;
+                        border-width: 5px;
+                        border-style: solid;
+                        border-color: transparent black transparent transparent;
+                    }
+
+                .tooltip:hover .tooltiptext {
+                    visibility: visible;
+                }
+
+            .button {
+                background-color: #B8DBDD;
+                transition-duration: 0.4s;
+                border-radius: 8px;
+            }
+
+                .button:active {
+                    background-color: #3e8e41;
+                    box-shadow: 0 5px #666;
+                    transform: translateY(4px);
+                }
+
+            .rndbutnhov:hover {
+                background-color: #4CAF50; /* Green */
+                color: white;
+            }
+
+            .blkbutton {
+                color: white;
+                transition-duration: 0.4s;
+                border-radius: 8px;
+                background-color: #555555;
+            }
+
+                .blkbutton:active {
+                    background-color: #3e8e41;
+                    box-shadow: 0 5px #666;
+                    transform: translateY(4px);
+                }
+
+            .blkbutnhov:hover {
+                background-color: #f4511e;
+                color: yellow;
+            }
+
+            .table-row {
+                display: table-row;
+            }
+
+            .table-cell {
+                display: table-cell;
+                padding: 10px;
+            }
+
+            .table-header {
+                display: table-cell;
+                padding: 10px;
+                text-align: center;
+            }
+
+            .squareboxed {
+                border: 3px solid green;
+                padding: 10px;
+                width: 800px;
+            }
+        </style>
+
+
+
+
+        <p><h2>Juniper NAT Rules commands template </h2></p>
+        <i style="font-size:smaller">Tested Only in Chrome Browser. For bset result, please use Google Chrome</></i><br />
+        <i style="font-size:smaller">Sound Knowledge of NAT in JUNOS is required to use this template.</istyle>
+        <form id="nat_mode">
+            <p><b>Select either source or destination NAT to generates commands.</b></p>
+            <input type='radio' name='natmode' value='source' checked>source nat
+            <input type='radio' name='natmode' value='destination'>destination nat
+            <input type='radio' name='natmode' value='static'>static nat
+            <br><br>
+        </form>
+
+        <form id="NATPolicyForm">
+            <p><h3> Create NAT Rules : </h1></p>
+            <div class="squareboxed">
+                Source NAT Pool name:<input type="text" id="snatpoolname" value="" size="30" ondblclick='this.value = ""'><br><br>
+                Source nat address: <div class="tooltip">(?)<span class="tooltiptext">address ip-address (to ip-address)</span></div>
+                <input type="checkbox" id="srcnatip_checkbox" checked><input type="text" id="src_nat_pool_addr" value="" ondblclick='this.value = ""'>
+                source nat port :<div class="tooltip">(?)<span class="tooltiptext">port (no-translation | range port-low (to port-high)</span></div>
+                <input type="checkbox" id="srcnatport_checkbox"><input type="text" id="src_nat_port" value="" ondblclick='this.value = ""'><br><br>
+                other source nat pool options : <div class="tooltip">(?)<span class="tooltiptext">address-shared /overflow-pool</span></div>
+                <input type="checkbox" id="srcnatopt_checkbox"><input type="text" id="srcnat_opts" value="" ondblclick='this.value = ""'>
+            </div>
+            <br>
+            <div class="squareboxed">
+                Destination NAT Pool name :<input type="text" id="dnatpoolname" value="" size="30" ondblclick='this.value = ""'><br><br>
+                Destination nat address: <div class="tooltip">(?)<span class="tooltiptext">address ip-address { port port-number | to ip-address}</span></div>
+                <input type="checkbox" id="dstnatip_checkbox" checked><input type="text" id="dst_nat_pool_addr" value="" ondblclick='this.value = ""'>
+                Destination nat port : <input type="checkbox" id="dstnatport_checkbox"><input type="text" id="dst_nat_port" value="" ondblclick='this.value = ""'>
+            </div><br>
+
+            NAT Rule-set Name :<input type="text" id="rule_set_name" value="RuleSet-1" size="30" ondblclick='this.value = ""'><br><br>
+            NAT Rule-set Description :<input type="text" id="rule_set_desc" size="40" value="" ondblclick='this.value = ""'><br><br>
+            NAT Rule Name :<input type="text" id="rule_name" value="Rule-1" size="30" ondblclick='this.value = ""'><br><br>
+            NAT Rule Name description :<input type="text" id="rule_name_desc" size="30" value="" ondblclick='this.value = ""'><br><br>
+            Enter source-address(name) separated by comma:<textarea class="txtbox_pos" id="src_addr_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
+            Enter destination-address(name) separated by comma:<textarea class="txtbox_pos" id="dst_addr_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
+            From Zone :<div class="tooltip">
+                (?)<span class="tooltiptext">can apply to both source and destination NAT rules</span>
+            </div>
+            <input type="text" id="from_zone" size="30" value="TRUST-zone" ondblclick='this.value = ""'><br><br>
+            To Zone :<div class="tooltip">
+                (?)<span class="tooltiptext">Do not apply to Destination NAT, please refer to Junos doco.</span>
+            </div>
+            <input type="text" id="to_zone" size="30" value="UNTRUST-zone" ondblclick='this.value = ""'><br><br>
+            from Interface(NAT):<div class="tooltip">(?)<span class="tooltiptext">source nat interface or enter Interface name for proxy arp</span></div>
+            <input type="text" id="from_intf" value=""><br><br>
+            from Routing-Instance : <input type="text" size="20" id="Route_Instance" ondblclick='this.value = ""' value=""><br><br>
+            (match) Application : <input type="text" size="20" id="app_name" ondblclick='this.value = ""' value=""><br><br>
+            (match) Destination-port :<div class="tooltip">(?)<span class="tooltiptext">port | port low to high</span></div>
+            <input type="text" size="20" id="dest_port" ondblclick='this.value = ""' value=""><br><br>
+            source or destination nat-off :<div class="tooltip">(?)<span class="tooltiptext">select nat mode to have either "source-nat off" or "destination-nat off"</span></div>
+            <input type="checkbox" id="nat_off" value=""><br><br>
+
+            <div class="squareboxed">
+                <b>static-nat specific options</b><br><br>
+                mapped-port :<div class="tooltip">(?)<span class="tooltiptext">for static-nat ( port | lower-port-range to upper-port-range)</span></div>
+                <input type="text" size="20" id="mapped_port" ondblclick='this.value = ""' value=""><br><br>
+                address prefix : <div class="tooltip">(?)<span class="tooltiptext">for static-nat (address-prefix)</span></div>
+                <input type="text" size="20" id="address_prefix" ondblclick='this.value = ""' value="">
+            </div><br><br>
+            proxy-arp address(or range):<input type="checkbox" id="proxy_arp_checkbox" value=""><input type="text" id="proxy_arp_ip" value=""><br>
+
+            </div>
+        </form>
+
+        <br>
+        <br>
+        <button class="button rndbutnhov" onclick='gen_source_nat_pool()'>generate source nat pool</button>
+        <button class="button rndbutnhov" onclick='gen_dest_nat_pool()'>generate destination nat pool</button>
+        <br>
+        <br>
+        <button class="button rndbutnhov" onclick='gen_srcnat_rules()'>generate source nat rules</button>
+        <button class="button rndbutnhov" onclick='gen_dstnat_rules()'>generate destination nat rules</button>
+        <br>
+        <br>
+        <button class="button rndbutnhov" onclick='gen_static_nat_rules()'>generate static nat rules</button>
+        <button class="button rndbutnhov" onclick='proxy_arp_cmd()'>set proxy-arp</button>
+        <button class="button rndbutnhov" onclick='clearTXTAreaObjs("nat_rules")'>Clear output</button>
+        <br>
+        <br>
+
+<textarea id="nat_rules" rows="10" cols="120" readonly>
+</textarea>
+        <br>
+        <br>
+        <br>
+        <br>
+
+<footer>
+     <p id="myfooter" style="font-size:10px">
+     </p>
+</footer>
+
+<script src="gensrxnatrules.js">
+</script>
+
+</body>
+</html>
