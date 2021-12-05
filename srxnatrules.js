@@ -82,6 +82,8 @@ let snatRuleObjs = () => {
         rule_name_desc : natForm.rule_name_desc.value,
         src_addr_list : natForm.src_addr_list.value.split(","),
         dst_addr_list : natForm.dst_addr_list.value.split(","),
+        src_objname_list : natForm.src_objname_list.value.split(","),
+		dst_objname_list : natForm.dst_objname_list.value.split(","),
         frmzone : natForm.from_zone.value,
         tozone : natForm.to_zone.value,
         from_intf : natForm.from_intf.value,
@@ -141,17 +143,17 @@ function gen_srcnat_rules() {
         }
         
         if (nat.src_objname_list != "") {
-            for (const srcAddr of nat.src_objname_list) {
+            for (const srcObj of nat.src_objname_list) {
 
-                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcAddr}\n`;
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcObj}\n`;
             }
         }
 
 
         if (nat.dst_addr_list != "") {
-            for (const dstAddr of nat.dst_addr_list) {
+            for (const dstObj of nat.dst_addr_list) {
 
-                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address ${dstAddr}\n`;
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address ${dstObj}\n`;
             }
         }
         
@@ -224,9 +226,9 @@ function gen_dstnat_rules() {
         }
         
         if (nat.src_objname_list != "") {
-            for (const srcAddr of nat.src_objname_list) {
+            for (const srcObj of nat.src_objname_list) {
 
-                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcAddr}\n`;
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcObj}\n`;
             }
         }
 
@@ -239,9 +241,9 @@ function gen_dstnat_rules() {
         }
         
         if (nat.dst_objname_list != "") {
-            for (const dstAddr of nat.dst_objname_list) {
+            for (const dstObj of nat.dst_objname_list) {
 
-                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address-name ${dstAddr}\n`;
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address-name ${dstObj}\n`;
             }
         }
         
@@ -305,9 +307,9 @@ function gen_static_nat_rules() {
     }
     
      if (nat.src_objname_list != "") {
-            for (const srcAddr of nat.src_objname_list) {
+            for (const srcObj of nat.src_objname_list) {
 
-                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcAddr}\n`;
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcObj}\n`;
             }
       }
 
@@ -320,9 +322,9 @@ function gen_static_nat_rules() {
     }
 
     if (nat.dst_objname_list != "") {
-            for (const dstAddr of nat.dst_objname_list) {
+            for (const dstObj of nat.dst_objname_list) {
 
-                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address-name ${dstAddr}\n`;
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address-name ${dstObj}\n`;
             }
     }
      
