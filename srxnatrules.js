@@ -83,7 +83,7 @@ let snatRuleObjs = () => {
         src_addr_list : natForm.src_addr_list.value.split(","),
         dst_addr_list : natForm.dst_addr_list.value.split(","),
         src_objname_list : natForm.src_objname_list.value.split(","),
-		dst_objname_list : natForm.dst_objname_list.value.split(","),
+	dst_objname_list : natForm.dst_objname_list.value.split(","),
         frmzone : natForm.from_zone.value,
         tozone : natForm.to_zone.value,
         from_intf : natForm.from_intf.value,
