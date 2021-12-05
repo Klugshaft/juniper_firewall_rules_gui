@@ -139,6 +139,14 @@ function gen_srcnat_rules() {
                 natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address ${srcAddr}\n`;
             }
         }
+        
+        if (nat.src_objname_list != "") {
+            for (const srcAddr of nat.src_objname_list) {
+
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcAddr}\n`;
+            }
+        }
+
 
         if (nat.dst_addr_list != "") {
             for (const dstAddr of nat.dst_addr_list) {
@@ -146,6 +154,14 @@ function gen_srcnat_rules() {
                 natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address ${dstAddr}\n`;
             }
         }
+        
+        if (nat.dst_objname_list != "") {
+            for (const dstAddr of nat.dst_objname_list) {
+
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address-name ${dstAddr}\n`;
+            }
+        }
+        
         if (nat.app_name != "") {
             natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match application ${nat.app_name}\n`;
         }
@@ -206,6 +222,14 @@ function gen_dstnat_rules() {
                 natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address ${srcAddr}\n`
             }
         }
+        
+        if (nat.src_objname_list != "") {
+            for (const srcAddr of nat.src_objname_list) {
+
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcAddr}\n`;
+            }
+        }
+
 
         if (nat.dst_addr_list != "") {
             for ( const dstAddr of nat.dst_addr_list ) {
@@ -213,6 +237,15 @@ function gen_dstnat_rules() {
                 natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address ${dstAddr}\n`
             }
         }
+        
+        if (nat.dst_objname_list != "") {
+            for (const dstAddr of nat.dst_objname_list) {
+
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address-name ${dstAddr}\n`;
+            }
+        }
+        
+        
         if (nat.app_name != "") {
             natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match application ${nat.app_name}\n`
         }
@@ -270,6 +303,14 @@ function gen_static_nat_rules() {
             natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address ${srcAddr}\n`
         }
     }
+    
+     if (nat.src_objname_list != "") {
+            for (const srcAddr of nat.src_objname_list) {
+
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match source-address-name ${srcAddr}\n`;
+            }
+      }
+
 
     if (nat.dst_addr_list != "") {
         for (const dstAddr of nat.dst_addr_list) {
@@ -278,6 +319,14 @@ function gen_static_nat_rules() {
         }
     }
 
+    if (nat.dst_objname_list != "") {
+            for (const dstAddr of nat.dst_objname_list) {
+
+                natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destination-address-name ${dstAddr}\n`;
+            }
+    }
+     
+    
 
     if (nat.dest_port != "") {
         natRule.innerHTML += `set security nat ${natMode} rule-set ${nat.rule_set_name} rule ${nat.rule_name} match destintaion-port ${nat.dest_port}\n`
