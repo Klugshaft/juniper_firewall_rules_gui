@@ -165,8 +165,12 @@
             NAT Rule-set Description :<input type="text" id="rule_set_desc" size="40" value="" ondblclick='this.value = ""'><br><br>
             NAT Rule Name :<input type="text" id="rule_name" value="Rule-1" size="30" ondblclick='this.value = ""'><br><br>
             NAT Rule Name description :<input type="text" id="rule_name_desc" size="30" value="" ondblclick='this.value = ""'><br><br>
-            Enter source-address(name) separated by comma:<textarea class="txtbox_pos" id="src_addr_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
-            Enter destination-address(name) separated by comma:<textarea class="txtbox_pos" id="dst_addr_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
+            
+            Enter source-address(IP) separated by comma:<textarea class="txtbox_pos" id="src_addr_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
+            OR Enter source object(name) separated by comma:<textarea class="txtbox_pos" id="src_objname_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
+            Enter destination-address(IP) separated by comma:<textarea class="txtbox_pos" id="dst_addr_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
+            OR Enter destination object(name) separated by comma:<textarea class="txtbox_pos" id="dst_objname_list" rows="2" cols="60" ondblclick='this.value = ""'></textarea><br><br>
+    
             From Zone :<div class="tooltip">
                 (?)<span class="tooltiptext">can apply to both source and destination NAT rules</span>
             </div>
