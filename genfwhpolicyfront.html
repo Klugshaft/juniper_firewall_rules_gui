@@ -1,5 +1,9 @@
 <html>
-<!-- HTML frontend to generate Juniper firewall rules. by Calvin Kwok 202004 v1.1 -->
+
+<!-- HTML frontend to generate Juniper firewall rules. 20200330 v1.3 -->
+<!-- clear input added -->
+<!-- added Lsys support -->
+<body>
 <head>
 <style>
 textarea {
@@ -23,7 +27,10 @@ align : left ;
 	align: left;
 	width:80% ;
 }
-
+.footer {
+  font-family: Helvetica;
+  font-size: x-small;
+}
 .tooltip {
   position: relative;
   display: inline-block;
@@ -31,21 +38,30 @@ align : left ;
   font-size: small;
   border-bottom: 1px dotted black;
 }
-
 .tooltip .tooltiptext {
   visibility: hidden;
   width: 220px;
   background-color: black;
   color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  /* Position the tooltip */
+  text-align: left;
+  border-radius: 5px;
+  padding: 5px 0 5px 5px;
   position: absolute;
   z-index: 1;
+  top: -5px;
+  left: 110%;
 }
 
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent black transparent transparent;
+}
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
@@ -83,35 +99,47 @@ color: yellow;
 }
 
 </style>
+<script type="text/javascript">
+
+
+
+</script>
 </head>
 <p><b><font size = "4" face="verdana" >Juniper firewall rules generator </font></b>
-<font size = "2" face="verdana" >version 1.1</font></p>
+<font size = "2" face="verdana" >version 1.3</font></p>
+
+<div>
+	Logical System name :<div class="tooltip">(?)<span class="tooltiptext">Leave it empty if there's no LSYS defined, double-click to clear field.</span></div><input type="text" id="lsys" value="" ondblclick = 'this.value = ""'>
+</div>
+
+
 <form id = "fwAddrObjForm" > 
 <div class="AddrObj" >
 
 	<p><h4> move your mouse pointer to (?) for hints </h4></p>
-	IP Object(s):<div class="tooltip">(?)<span class="tooltiptext">To create Address Set, enter multiple objects separated by comma in the IP Object text box</span>
+	Name of IP Object(s) :<div class="tooltip">(?)<span class="tooltiptext">To create Address Set, enter multiple objects separated by comma in the IP Object text box</span>
 	</div>
-	<input size = "50" type="text" id="addrObjName" value="">
+	<input size = "30" type="text" id="addrObjName" ondblclick = 'this.value = ""' value="">
 	</p>
 <!--	<font size ="1" face = "verdana" >( To create Address Set, enter multiple objects separated by comma in the IP Object text box)</font> </p>
 -->	
-	IP or Subnet address : <input type="text" id="ipaddr" value=""></p>
+	IP or Subnet address : <input type="text" id="ipAddr" value=""></p>
 	Address Book Name <div class="tooltip">(?):<span class="tooltiptext">Leave it as "global" or clear it.</span>
 	</div> 
-	<input type="text" id="addrbookname" value="global"></p> 
+	<input type="text" id="addrBookname" value="global"></p> 
 	Create address set from above object</p>
-	Address set name : <input type="text" name="addrsetname" value=""></p>
+	Address set name : <input type="text" name="addrSetname" value=""></p>
 
 </div>
 </form>
 
 <h3>Generate firewall objects for Junos OS, copy and paste into the command line console</h3>      
 <p>
-<button class="button rndbutnhov" onclick = 'genAddrObjs()' > create Address objects </button>
+<button class="button rndbutnhov" onclick = 'genAddrObjs()' >Create Address objects </button>
 <button class="button rndbutnhov" onclick = 'createAddrSet()' >Create Address GROUP</button>
 
-<p><button class="blkbutton blkbutnhov" onclick = 'clearTXTAreaObjs("fwAddrObjTXT")' >Reset Address objects</button></p>
+<p><button class="blkbutton blkbutnhov" onclick = 'clearTXTAreaObjs("fwAddrObjTXT")' >Clear output</button>
+<button class="blkbutton blkbutnhov" onclick = 'clearInput("fwAddrObjForm")' >Clear input</button></p>
 <textarea id="fwAddrObjTXT" >
 </textarea>
 </p>
@@ -119,11 +147,11 @@ color: yellow;
 <form id = "fwSvcObjForm" >
 <div class="SvcObj">
  
-<p><h4> Create application object, leave the word "default" for default value or empty if not needed </h4></p>
-
+<p><h3> Create application object, leave the word "default" for default value or empty if not needed </h3></p>
+<p><h5><i>(Not for Custom application). see detail <a href="https://www.juniper.net/documentation/en_US/junos/topics/topic-map/security-policy-custom-applications.html#id-example-adding-and-modifying-custom-policy-applications">here</a></i></h5></p>
 	Port name :<div class="tooltip">(?)<span class="tooltiptext" >For Application Set(Group), enter in above text box a list of port names separated by comma</span>
 	</div>
-	<input type="text" id="portname" value=""></p>
+	<input type="text" size="30" id="portname" ondblclick = 'this.value = ""' value=""></p>
 	tcp or udp : <input type="text" id="SvcProtocol" value="tcp"></p>
 	source port(or range):<div class="tooltip">(?)<span class="tooltiptext" >Leave it as "default" (0-65535)</span>
 	</div>
@@ -138,10 +166,11 @@ color: yellow;
 </form>
 
 <p>
-<button class="button rndbutnhov" onclick = 'genportstatement()'> Create a single service object </button>
+<button class="button rndbutnhov" onclick = 'genPortStatement()'> Create a single service object </button>
 <button class="button rndbutnhov" onclick = 'createSvcSet()' >Create application GROUP</button>
 </p>
-<p><button class="blkbutton blkbutnhov" onclick = 'clearTXTAreaObjs("fwSvcObjTXT")' >Reset Service objects</button></p>
+<p><button class="blkbutton blkbutnhov" onclick = 'clearTXTAreaObjs("fwSvcObjTXT")' >Clear output</button>
+  <button class="blkbutton blkbutnhov" onclick = 'clearInput("fwSvcObjForm")' >Clear input</button></p>
 <textarea id="fwSvcObjTXT" >
 </textarea>
 </p>
@@ -149,23 +178,23 @@ color: yellow;
 <form id = "fwPolicyForm" >
 <div class = "fwrules">
 <p><h3> Create security policy, fill in detail below : </h1></p>	
-	Policy Name :<input type="text" id="policyname" value="-Rule-"></p>
+	Policy Name :<input type="text" id="policyname" value="-Rule-" ondblclick = 'this.value = ""' ></p>
 	Is Global Policy ? <input type="checkbox" id="globalpolicy" value = "False" ></p>
-	Policy Description (double quote your entry):<input type="text" id="policydesc" value=""></p>
-	Enter source object(s) separated by comma:<input type="text" size = "80" id="source_object" value="any"></p>
-	Enter destination object(s) separated by comma:<input type="text" size = "80" id="destination_object" value="any"></p>
-	From Zone :<div class="tooltip">(?)<span class="tooltiptext" >For global rule, you can enter mulitple trust zones separated by comma</span>
+	Policy Description (double quote your entry):<input type="text" id="policydesc" value="" ondblclick = 'this.value = ""'></p>
+	Enter source object(s) separated by comma:<input type="text" size = "80" id="source_object" value="any" ondblclick = 'this.value = ""'></p>
+	Enter destination object(s) separated by comma:<input type="text" size = "80" id="destination_object" value="any" ondblclick = 'this.value = ""'></p>
+	From Zone :<div class="tooltip">(?)<span class="tooltiptext" >For global rule, you can enter mulitple trust zones separated by comma,double-click to clear field</span>
 	</div>
-	<input type="text" id="from_zone" value="TRUST-zone"></p>
-	To Zone :<div class="tooltip">(?)<span class="tooltiptext" >For global rule, yon can enter mulitple trust zones separated by comma</span>
+	<input type="text" id="from_zone" value="TRUST-zone" ondblclick = 'this.value = ""' ></p>
+	To Zone :<div class="tooltip">(?)<span class="tooltiptext" >For global rule, yon can enter mulitple trust zones separated by comma,double-click to clear field</span>
 	</div>
-	<input type="text" id="to_zone" value="UNTRUST-zone"></p>
+	<input type="text" id="to_zone" value="UNTRUST-zone" ondblclick = 'this.value = ""' ></p>
 	<font size ="1" face = "verdana" >( Clear the above zone entry if global rule does not apply to any zone ) </font></p>
-	Port(s) separated by comma: <input type="text" size = "50" id="ports" value="any"></p>
+	Port(s) separated by comma: <input type="text" size = "50" id="ports" ondblclick = 'this.value = ""' value="any"></p>
 	Class of Service/Rule set name :<div class="tooltip">(?)<span class="tooltiptext" >Leave it as "none" if not required </span>
 	</div>
 	<input type="text" id="cosval" value="none"></p>
-	Action:<input type="text" id="action" value="permit"></p>
+	Action:<input type="text" id="action" value="permit">  IDP PolicyName <input type="text" id="idpPolicyName" value="none"></p>
 	Log :<div class="tooltip">(?)<span class="tooltiptext" >Enter mulitple log options such as "session-init, session-close" separated by comma</span>
 	</div>
 	<input type="text" id="log" value="session-init"></p>
@@ -175,14 +204,16 @@ color: yellow;
 <p>Click the following button to generate firewall rules for Junos OS</p>
 <button class="button rndbutnhov" onclick = 'genFwPolicy()' >Generate firewall rules</button>
 <p>
-<p><button class="blkbutton blkbutnhov" onclick = 'clearTXTAreaObjs("fwrTXT")' >Clear Firewall Policies</button></p>
+<p><button class="blkbutton blkbutnhov" onclick = 'clearTXTAreaObjs("fwrTXT")' >Clear output</button>
+<button class="blkbutton blkbutnhov" onclick = 'clearInput("fwPolicyForm")' >Clear input</button></p>
 <textarea id="fwrTXT" >
 </textarea>
 </p>
 
 </div>
 </form>
-<script src = "srxfwrules.js">
 
-</script>
+<script src="./gensrxfwrcode.js"></script>
+
+</body>
 </html>
