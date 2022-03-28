@@ -27,7 +27,6 @@ let snatPoolvar = () => {
 
 function gen_source_nat_pool() {
 
-    // var form = document.getElementById("NATPolicyForm");
     let nat = snatPoolvar();
     let natRule = document.getElementById("nat_rules");
     let natMode = getNatMode();
@@ -83,7 +82,7 @@ let snatRuleObjs = () => {
         src_addr_list : natForm.src_addr_list.value.split(","),
         dst_addr_list : natForm.dst_addr_list.value.split(","),
         src_objname_list : natForm.src_objname_list.value.split(","),
-	dst_objname_list : natForm.dst_objname_list.value.split(","),
+		dst_objname_list : natForm.dst_objname_list.value.split(","),
         frmzone : natForm.from_zone.value,
         tozone : natForm.to_zone.value,
         from_intf : natForm.from_intf.value,
@@ -363,4 +362,4 @@ function proxy_arp_cmd() {
     }
 }
 
-document.getElementById("myfooter").innerHTML = `Private internal use only, not for public distirbution! Copyright &copy 2020 by Calvin Kwok\n`;
+document.getElementById("myfooter").innerHTML = `Private internal use only, not for public distirbution! Copyright &copy 2022 by Calvin Kwok\n`;
