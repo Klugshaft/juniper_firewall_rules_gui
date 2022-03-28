@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
 <!-- HTML frontend to generate NAT rules on Juniper SRX firewall. 20200711 v1.0 -->
@@ -132,8 +130,8 @@
 
 
         <p><h2>Juniper NAT Rules commands template </h2></p>
-        <i style="font-size:smaller">Tested Only in Chrome Browser. For bset result, please use Google Chrome</></i><br />
-        <i style="font-size:smaller">Sound Knowledge of NAT in JUNOS is required to use this template.</istyle>
+        <i style="font-size:smaller">Tested Only in Chrome and MS Edge Browsers.</i><br />
+        <i style="font-size:smaller">There's no syntax checking on your input, therefore sound Knowledge of NAT translation in JUNOS is required to use this template.</istyle></i>
         <form id="nat_mode">
             <p><b>Select either source or destination NAT to generates commands.</b></p>
             <input type='radio' name='natmode' value='source' checked>source nat
@@ -143,7 +141,7 @@
         </form>
 
         <form id="NATPolicyForm">
-            <p><h3> Create NAT Rules : </h1></p>
+            <p><h3> Create NAT Rules : </h3></p>
             <div class="squareboxed">
                 Source NAT Pool name:<input type="text" id="snatpoolname" value="" size="30" ondblclick='this.value = ""'><br><br>
                 Source nat address: <div class="tooltip">(?)<span class="tooltiptext">address ip-address (to ip-address)</span></div>
@@ -228,7 +226,7 @@
      </p>
 </footer>
 
-<script src="gensrxnatrules.js">
+<script src="srxnatrules.js">
 </script>
 
 </body>
