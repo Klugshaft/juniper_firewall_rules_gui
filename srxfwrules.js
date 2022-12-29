@@ -1,6 +1,7 @@
 // script utilizes objects and function expression to reduce repetition of declaration of variables in functions
 // ir also reduces the load time of page
 
+
 const setcmd = function() {
 	lsysName = document.getElementById("lsys").value
 	return( lsysName == "" ) ?  "set" :`set logical-systems ${lsysName}`
@@ -22,6 +23,24 @@ function clearInput(formObj) {
 const ipObjForm = document.getElementById("fwAddrObjForm") ;
 const svcObjForm = document.getElementById("fwSvcObjForm") ;
 const fwPolicyForm = document.getElementById("fwPolicyForm") ; 
+
+
+function validateIPaddr() {
+
+
+	ipVal = ipObjForm.ipAddr.value;
+ 	if (ipVal == "" ) { 
+	 //do nothing
+	} else if ((/^(?!,)(,?(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\/\d{1,2})+$/).test(ipVal)) 
+	{
+        //alert('Valid!');
+    } else {
+        alert('Invalid!');
+		document.getElementById("fwAddrObjForm").ipAddr.value = "";
+    }
+	
+}
+
 
 const fwObjs = function() {
 	return {
