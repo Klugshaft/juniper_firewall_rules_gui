@@ -1,0 +1,211 @@
+
+<!-- authored by M056949 P&P 
+20240205
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Source NAT Policies Display</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .custom-file-upload {
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 1px 20px;
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Source NAT Policies Display</h1>
+    <h3>Total NAT Pools: <span id="totalNatPools">0</span></h3>
+    <h3>Total NAT Policies: <span id="totalNatPolicies">0</span></h3>
+
+    <p>Execute following commands from Juniper device to obtain JSON formatted policies <br>
+        For firewall Policies, do,<br>
+             > show configuration security nat source | display json | no-more <br><br>
+         If you encounter invalid JSON format error, Please go to https://jsonlint.com/ to validate the JSON file before loading<br>
+         backslashes from JSON file before loading the file. <br>
+     
+     </p><br>
+    <input type="file" id="fileInput" class="custom-file-upload">
+    <button onclick="displayPolicies()">Display Policies</button>
+    <div id="summary"></div>
+    <div id="output"></div>
+
+    <script>
+
+        function removeBackslashes(jsonString) {
+            return jsonString.replace(/\\/g, '');
+        }
+
+        function displayPolicies() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                try {
+                    // Remove backslashes from JSON string
+                    let jsonString = removeBackslashes(event.target.result);
+                    const data = JSON.parse(jsonString).configuration;
+                    console.log('Parsed JSON data:', data);
+
+                    const commitTime = data['@']?.['junos:commit-localtime'];
+                    const logicalSystems = data['logical-systems'];
+                    const security = data.security;
+
+                    let summary = `<h2>Commit Time: ${commitTime}</h2>`;
+                    let output = '';
+                    let totalNatPools = 0;
+                    let totalNatPolicies = 0;
+                    
+                    if (security) {
+                        const natPools = security.nat?.source?.pool;
+                        const ruleSets = security.nat?.source?.['rule-set'] || [];
+                 
+                    
+                        if (natPools) {
+                                totalNatPools += natPools.length;
+                                summary += '<h3>Source NAT Pools</h3>';
+                                summary += '<table><tr><th>Pool Name</th><th>Address</th></tr>';
+                                natPools.forEach(pool => {
+                                summary += `<tr>
+                                    <td>${pool.name}</td>
+                                    <td>${pool.address.map(addr => addr.name).join(', ')}</td>
+                                </tr>`;
+                                });
+                            summary += '</table>';
+                        }
+                    
+                    
+                        if (ruleSets) {
+                        
+                            ruleSets.forEach((ruleSet, index) => {
+                                totalNatPolicies += ruleSet.rule.length;
+                                output += `<h3>Rule Set: ${ruleSet.name}</h3>`;
+                                output += '<table><tr><th>Policy Count</th><th>Description</th><th>Ruleset Name</th><th>From Zone</th><th>To Zone</th><th>Rule Name</th><th>Source</th><th>Destination</th><th>Application</th><th>Source NAT To</th></tr>';
+                                
+                                ruleSet.rule.forEach((rule, ruleIndex) => {
+                                    const description = rule.description || 'na';
+                                    const sourceNat = rule.then?.['source-nat']?.pool?.['pool-name'] || rule.then?.['source-nat']?.interface || 'N/A';
+                    
+                                    output += `<tr>
+                                    <td>${index + 1}.${ruleIndex + 1}</td>
+                                    <td>${description}</td>
+                                    <td>${ruleSet.name}</td>
+                                    <td>${ruleSet.from?.zone?.join(', ') || 'N/A'}</td>
+                                    <td>${ruleSet.to?.zone?.join(', ') || 'N/A'}</td>
+                                    <td>${rule.name}</td>
+                                    <td>${rule['src-nat-rule-match']?.['source-address-name']?.join(', ') || rule['src-nat-rule-match']?.['source-address']?.join(', ') || 'N/A'}</td>
+                                    <td>${rule['src-nat-rule-match']?.['destination-address-name']?.join(', ') || rule['src-nat-rule-match']?.['destination-address']?.join(', ') || 'N/A'}</td>
+                                    <td>${rule['src-nat-rule-match']?.application?.join(', ') || 'N/A'}</td>
+                                    <td>${sourceNat}</td>
+                                </tr>`;
+                                });
+                            output += '</table>';
+                            });
+                        }
+                    } 
+                                     
+                    if (logicalSystems) {
+                        logicalSystems.forEach(system => {
+                            const logicalSystemName = system.name;
+                            const natPools = system.security?.nat?.source?.pool;
+                            const ruleSets = system.security?.nat?.source?.['rule-set'] || [];
+
+                            summary += `<h2>Logical System Name: ${logicalSystemName}</h2>`;
+
+                            if (natPools) {
+                                totalNatPools += natPools.length;
+                                console.log("length of NAT pool is " + natPools.length);
+                                summary += '<h3>Source NAT Pools</h3>';
+                                summary += '<table><tr><th>Pool Name</th><th>Address</th></tr>';
+                                natPools.forEach(pool => {
+                                    summary += `<tr>
+                                        <td>${pool.name}</td>
+                                        <td>${pool.address.map(addr => addr.name).join(', ')}</td>
+                                    </tr>`;
+                                });
+                                summary += '</table>';
+                            } 
+
+						    if (ruleSets) {
+								    //console.log("ruleSet length is " + ruleSets.rule.length );
+									ruleSets.forEach((ruleSet, index) => {
+                                       // const ruleSetName = ruleSet.name || 'Unnamed Rule Set';
+                                        const RS_rules = ruleSet.rule || [];
+										totalNatPolicies += RS_rules.length;
+                                        console.log("length of ruleset is " + RS_rules.length);
+                                            output += `<h3>Rule Set: ${ruleSet.name}</h3>`;
+                                            output += '<table><tr><th>Policy Count</th><th>Description</th><th>Ruleset Name</th><th>From Zone</th><th>To Zone</th><th>Rule Name</th><th>Source</th><th>Destination</th><th>Application</th><th>Source NAT To</th></tr>';
+                                                RS_rules.forEach((rule, ruleIndex) => { 
+                                                const description = rule.description || 'na';
+                                                const sourceNat = rule.then?.['source-nat']?.pool?.['pool-name'] || rule.then?.['source-nat']?.interface || 'N/A';
+
+                                                output += `<tr>
+                                                <td>${index + 1}.${ruleIndex + 1}</td>
+                                                <td>${description}</td>
+                                                <td>${ruleSet.name}</td>
+                                                <td>${ruleSet.from?.zone?.join(', ') || 'N/A'}</td>
+                                                <td>${ruleSet.to?.zone?.join(', ') || 'N/A'}</td>
+                                                <td>${rule.name}</td>
+                                                <td>${rule['src-nat-rule-match']?.['source-address-name']?.join(', ') || rule['src-nat-rule-match']?.['source-address']?.join(', ') || 'N/A'}</td>
+                                                <td>${rule['src-nat-rule-match']?.['destination-address-name']?.join(', ') || rule['src-nat-rule-match']?.['destination-address']?.join(', ') || 'N/A'}</td>
+                                                <td>${rule['src-nat-rule-match']?.application?.join(', ') || 'N/A'}</td>
+                                                <td>${sourceNat}</td>
+                                                </tr>`;
+                                            });
+                                            output += '</table>';
+                                        });     
+                                    }
+                        });
+                    }
+                    
+
+                    
+                    
+                    document.getElementById('totalNatPools').innerText = totalNatPools;
+                    document.getElementById('totalNatPolicies').innerText = totalNatPolicies;
+                    console.log("Total NAT Policies is " + totalNatPolicies)
+                    document.getElementById('summary').innerHTML = summary;
+                    document.getElementById('output').innerHTML = output;
+                } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        alert('Invalid JSON format. Please check your input.');
+                    }          
+            };
+            reader.readAsText(file);
+        }
+
+        function saveToFile() {
+            const filename = prompt("Enter the filename to save:", "_snat_pol_.html");
+            if (filename) {
+                const summaryContent = document.getElementById('summary').innerHTML;
+                const outputContent = document.getElementById('output').innerHTML;
+                const blob = new Blob(['<style>table, th, td { border: 1px solid black; }</style>' + summaryContent + outputContent], { type: 'text/html' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+            }
+        }
+    </script>
+    <button onclick="saveToFile()">Save to File</button>
+</body>
+</html>

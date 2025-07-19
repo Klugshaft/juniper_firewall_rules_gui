@@ -1,0 +1,247 @@
+
+<!-- authored by M056949 P&P 
+20240205
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Display</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            word-wrap: break-word;
+        }
+        th {
+            background-color: #f2f2f2;
+            word-wrap: break-word
+        }
+
+        .custom-file-upload {
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 1px 20px;
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Junos Firewall Policies</h1>
+    <p>Execute following commands from Juniper device to obtain JSON formatted policies <br>
+       For firewall Policies, do,<br>
+            > show configuration security policies | display json | no-more <br><br>
+        If you encounter invalid JSON format error, Please go to https://jsonlint.com/ to validate the JSON file before loading<br>
+        e.g. Remove backslashes and quotes within quoted description field from JSON file before loading the file. <br>
+    
+    </p><br>
+    <input type="file" id="fileInput" class="custom-file-upload">
+    <button onclick="displayPolicies()">Display Policies</button>
+    <div id="summary"></div>
+    <div id="output"></div>
+
+    <script>
+
+        function removeBackslashes(jsonString) {
+            return jsonString.replace(/\\/g, ''); 
+        }
+
+        function displayPolicies() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                try {
+
+                    // Remove backslashes from JSON string
+                    let jsonString = removeBackslashes(event.target.result);
+
+
+                    const data = JSON.parse(jsonString).configuration;
+                    console.log('Parsed JSON data:', data);
+
+                    const commitTime = data['@']?.['junos:commit-localtime'];
+                    const commitUser = data['@']?.['junos:commit-user'];
+                    const logicalSystems = data['logical-systems'];
+                    const securityPolicies = data.security?.policies?.policy;
+                    const globalPolicies = data.security?.policies?.global?.policy;
+
+                    let summary = `<h3>Commit Time: ${commitTime}</h3><br>Commit User : ${commitUser}<br>`;
+                    let output = '';
+
+                    if (logicalSystems) {
+                        logicalSystems.forEach(system => {
+                            const logicalSystemName = system.name;
+                            const zonalPolicies = system.security?.policies?.policy;
+                            const systemGlobalPolicies = system.security?.policies?.global?.policy;
+
+                            const totalZonalPolicies = zonalPolicies ? zonalPolicies.length : 0;
+                            const totalGlobalPolicies = systemGlobalPolicies ? systemGlobalPolicies.length : 0;
+
+                            summary += `
+                                <h2>Logical System Name: ${logicalSystemName}</h2>
+                                <h2>Total Zonal Policies: ${totalZonalPolicies}</h2>
+                                <h2>Total Global Policies: ${totalGlobalPolicies}</h2>
+                            `;
+
+                            if (zonalPolicies) {
+                                output += '<h3>Zonal Policies</h3>';
+                                output += '<table><tr><th>Rule Number</th><th>Description</th><th>Rule name</th><th>Source Zone</th><th>Destination Zone</th><th>Source Address</th><th>Destination Address</th><th>Applications</th><th>Action</th><th>Application Services</th><th>TCP Options</th><th>Log</th></tr>';
+                                zonalPolicies.forEach((policy, index) => {
+                                    policy.policy.forEach((rule, ruleIndex) => {
+                                        const ruleName = rule.name || 'na';
+                                        const description = rule.description || 'na';
+                                        const applicationServices = rule.then.permit?.['application-services'];
+                                        const tcpOptions = rule.then.permit?.['tcp-options'];
+                                        const log = rule.then.log;
+
+                                        output += `<tr>
+                                            <td>${index + 1}.${ruleIndex + 1}</td>
+                                            <td>${description}</td>
+                                            <td>${ruleName}</td>
+                                            <td>${policy['from-zone-name']}</td>
+                                            <td>${policy['to-zone-name']}</td>
+                                            <td>${rule.match['source-address'].join(', ')}</td>
+                                            <td>${rule.match['destination-address'].join(', ')}</td>
+                                            <td>${rule.match.application.join(', ')}</td>
+                                            <td>${Object.keys(rule.then)[0]}</td>
+                                            <td>${applicationServices ? JSON.stringify(applicationServices) : 'any'}</td>
+                                            <td>${tcpOptions ? JSON.stringify(tcpOptions) : 'N/A'}</td>
+                                            <td>${log ? JSON.stringify(log) : 'N/A'}</td>
+                                        </tr>`;
+                                    });
+                                });
+                                output += '</table>';
+                            }
+
+                            if (systemGlobalPolicies) {
+                                output += '<h3>Global Policies</h3>';
+                                output += '<table><tr><th>Rule Number</th><th>Description</th><th>Rule name</th><th>Source Zone</th><th>Destination Zone</th><th>Source Address</th><th>Destination Address</th><th>Applications</th><th>Action</th><th>Application Services</th><th>TCP Options</th><th>Log</th></tr>';
+                                systemGlobalPolicies.forEach((policy, index) => {
+                                    const ruleName = policy.name || 'na';
+                                    const description = policy.description || 'na';
+                                    const applicationServices = policy.then.permit?.['application-services'];
+                                    const tcpOptions = policy.then.permit?.['tcp-options'];
+                                    const log = policy.then.log;
+
+                                    output += `<tr>
+                                        <td>${index + 1}</td>
+                                        <td>${description}</td>
+                                        <td>${ruleName}</td>
+                                        <td>Global</td>
+                                        <td>Global</td>
+                                        <td>${policy.match['source-address'].join(', ')}</td>
+                                        <td>${policy.match['destination-address'].join(', ')}</td>
+                                        <td>${policy.match.application.join(', ')}</td>
+                                        <td>${Object.keys(policy.then)[0]}</td>
+                                        <td>${applicationServices ? JSON.stringify(applicationServices) : 'any'}</td>
+                                        <td>${tcpOptions ? JSON.stringify(tcpOptions) : 'N/A'}</td>
+                                        <td>${log ? JSON.stringify(log) : 'N/A'}</td>
+                                    </tr>`;
+                                });
+                                output += '</table>';
+                            }
+                        });
+                    }
+
+                    if (securityPolicies) {
+                        const totalZonalPolicies = securityPolicies.length;
+                        const totalGlobalPolicies = globalPolicies ? globalPolicies.length : 0;
+
+                        summary += `
+                            <h2>Total Zonal Policies: ${totalZonalPolicies}</h2>
+                            <h2>Total Global Policies: ${totalGlobalPolicies}</h2>
+                        `;
+
+                        output += '<h3>Zonal Policies</h3>';
+                        output += '<table><tr><th>Rule Number</th><th>Description</th><th>Rule name</th><th>Source Zone</th><th>Destination Zone</th><th>Source Address</th><th>Destination Address</th><th>Applications</th><th>Action</th><th>Application Services</th><th>TCP Options</th><th>Log</th></tr>';
+                        securityPolicies.forEach((policy, index) => {
+                            policy.policy.forEach((rule, ruleIndex) => {
+                                const ruleName = rule.name || 'na';
+                                const description = rule.description || 'na';
+                                const applicationServices = rule.then.permit?.['application-services'];
+                                const tcpOptions = rule.then.permit?.['tcp-options'];
+                                const log = rule.then.log;
+
+                                output += `<tr>
+                                    <td>${index + 1}.${ruleIndex + 1}</td>
+                                    <td>${description}</td>
+                                    <td>${ruleName}</td>
+                                    <td>${policy['from-zone-name']}</td>
+                                    <td>${policy['to-zone-name']}</td>
+                                    <td>${rule.match['source-address'].join(', ')}</td>
+                                    <td>${rule.match['destination-address'].join(', ')}</td>
+                                    <td>${rule.match.application.join(', ')}</td>
+                                    <td>${Object.keys(rule.then)[0]}</td>
+                                    <td>${applicationServices ? JSON.stringify(applicationServices) : 'any'}</td>
+                                    <td>${tcpOptions ? JSON.stringify(tcpOptions) : 'N/A'}</td>
+                                    <td>${log ? JSON.stringify(log) : 'N/A'}</td>
+                                </tr>`;
+                            });
+                        });
+                        output += '</table>';
+                    }
+
+                    if (globalPolicies) {
+                        output += '<h3>Global Policies</h3>';
+                        output += '<table><tr><th>Rule Number</th><th>Description</th><th>Rule name</th><th>Source Zone</th><th>Destination Zone</th><th>Source Address</th><th>Destination Address</th><th>Applications</th><th>Action</th><th>Application Services</th><th>TCP Options</th><th>Log</th></tr>';
+                        globalPolicies.forEach((policy, index) => {
+                            const description = policy.description || 'na';
+                            const ruleName = policy.name || 'na';
+                            const applicationServices = policy.then.permit?.['application-services'];
+                            const tcpOptions = policy.then.permit?.['tcp-options'];
+                            const log = policy.then.log;
+
+                            output += `<tr>
+                                <td>${index + 1}</td>
+                                <td>${description}</td>
+                                <td>${ruleName}</td>
+                                <td>Global</td>
+                                <td>Global</td>
+                                <td>${policy.match['source-address'].join(', ')}</td>
+                                <td>${policy.match['destination-address'].join(', ')}</td>
+                                <td>${policy.match.application.join(', ')}</td>
+                                <td>${Object.keys(policy.then)[0]}</td>
+                                <td>${applicationServices ? JSON.stringify(applicationServices) : 'any'}</td>
+                                <td>${tcpOptions ? JSON.stringify(tcpOptions) : 'N/A'}</td>
+                                <td>${log ? JSON.stringify(log) : 'N/A'}</td>
+                            </tr>`;
+                        });
+                        output += '</table>';
+                    }
+
+                    document.getElementById('summary').innerHTML = summary;
+                    document.getElementById('output').innerHTML = output;
+                   
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    alert('Invalid JSON format. Please check your input.');
+                }
+            };
+
+            reader.readAsText(file);
+        }
+        function saveToFile() {
+            const filename = prompt("Enter the filename to save:", "_fwpol.html");
+            const firewallName = prompt("Enter firewall name :", "");
+            if (filename) {
+                const summaryContent = document.getElementById('summary').innerHTML;
+                const outputContent = document.getElementById('output').innerHTML;
+                const blob = new Blob(['<style>table, th, td { border: 1px solid black; }</style>' + '<h2>' + firewallName + '</h2>' + summaryContent + outputContent ], { type: 'text/html' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+            }
+        }
+    </script>
+    <button onclick="saveToFile()">Save to File</button>
+</body>
+</html>

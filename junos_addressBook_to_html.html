@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Book Objects</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Junos Address Book</h1>
+    <input type="file" id="fileInput" accept=".json">
+    <button onclick="processFile()">Process File</button>
+    <p>execute in junos cli , "show configuration security address-book | display json" to obtain the json file<br>
+       only include content between {} <br>
+    </p>
+    <h1 id="logical-systems-name"></h1>
+    <h2 id="address-book-name"></h2>
+    <h3>Total Address Objects: <span id="total-address-objects"></span></h3>
+    <h3>Total Address Sets: <span id="total-address-sets"></span></h3>
+
+    <h3>Address Objects</h3>
+    <table>
+        <tr>
+            <th>Object Count</th>
+            <th>Address Name</th>
+            <th>IP Prefix</th>
+        </tr>
+        <tbody id="address-objects-table"></tbody>
+    </table>
+
+    <h3>Address Sets</h3>
+    <table>
+        <tr>
+            <th>Address Set Name</th>
+            <th>Addresses</th>
+        </tr>
+        <tbody id="address-sets-table"></tbody>
+    </table>
+
+    <button onclick="saveToFile()">Save to HTML File</button>
+
+    <script>
+        let data;
+
+        function processFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                data = JSON.parse(event.target.result);
+                displayData();
+            };
+
+            reader.readAsText(file);
+        }
+
+        function displayData() {
+            // Check if 'logical-systems' key exists
+            let logicalSystemsName = 'none';
+            let addressBookName = '';
+            let addresses = [];
+            let addressSets = [];
+
+            if ('logical-systems' in data.configuration) {
+                logicalSystemsName = data.configuration["logical-systems"][0].name;
+                addressBookName = data.configuration["logical-systems"][0].security["address-book"][0].name;
+                addresses = data.configuration["logical-systems"][0].security["address-book"][0].address;
+                addressSets = data.configuration["logical-systems"][0].security["address-book"][0]["address-set"] || [];
+            } else {
+                addressBookName = data.configuration.security["address-book"][0].name;
+                addresses = data.configuration.security["address-book"][0].address;
+                addressSets = data.configuration.security["address-book"][0]["address-set"] || [];
+            }
+
+            // Display logical-systems name and address-book name
+            document.getElementById('logical-systems-name').textContent = `Logical Systems Name: ${logicalSystemsName}`;
+            document.getElementById('address-book-name').textContent = `Address Book Name: ${addressBookName}`;
+
+            // Display total number of address objects and address-set objects
+            document.getElementById('total-address-objects').textContent = addresses.length;
+            document.getElementById('total-address-sets').textContent = addressSets.length;
+
+            // Populate address objects table
+            const addressObjectsTable = document.getElementById('address-objects-table');
+            addressObjectsTable.innerHTML = '';
+            addresses.forEach((address, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${address.name}</td>
+                    <td>${address["ip-prefix"] || 'N/A'}</td>
+                `;
+                addressObjectsTable.appendChild(row);
+            });
+
+            // Populate address sets table
+            const addressSetsTable = document.getElementById('address-sets-table');
+            addressSetsTable.innerHTML = '';
+            addressSets.forEach(addressSet => {
+                const addressesInSet = addressSet.address.map(addr => addr.name).join(', ');
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${addressSet.name}</td>
+                    <td>${addressesInSet}</td>
+                `;
+                addressSetsTable.appendChild(row);
+            });
+        }
+
+        function saveToFile() {
+            const fileName = prompt("Enter the file name for the saved HTML file:", "_address_book_objects_.html");
+            if (!fileName) {
+                return; // Exit if no file name is provided
+            }
+
+            let htmlContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Address Book Objects</title>
+                    <style>
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        th, td {
+                            border: 1px solid black;
+                            padding: 8px;
+                            text-align: left;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                        }
+                    </style>
+                </head>
+                <body>
+            `;
+
+            htmlContent += `
+                <h1>${document.getElementById('logical-systems-name').textContent}</h1>
+                <h2>${document.getElementById('address-book-name').textContent}</h2>
+                <h3>Total Address Objects: ${document.getElementById('total-address-objects').textContent}</h3>
+                <h3>Total Address Sets: ${document.getElementById('total-address-sets').textContent}</h3>
+
+                <h3>Address Objects</h3>
+                <table>
+                    <tr>
+                        <th>Object Count</th>
+                        <th>Address Name</th>
+                        <th>IP Prefix</th>
+                    </tr>
+            `;
+
+            document.querySelectorAll('#address-objects-table tr').forEach(row => {
+                htmlContent += `<tr>${row.innerHTML}</tr>`;
+            });
+
+            htmlContent += `
+                </table>
+
+                <h3>Address Sets</h3>
+                <table>
+                    <tr>
+                        <th>Address Set Name</th>
+                        <th>Addresses</th>
+                    </tr>
+            `;
+
+            document.querySelectorAll('#address-sets-table tr').forEach(row => {
+                htmlContent += `<tr>${row.innerHTML}</tr>`;
+            });
+
+            htmlContent += `
+                </table>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+        }
+    </script>
+</body>
+</html>
